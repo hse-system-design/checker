@@ -2,4 +2,4 @@
 
 set -x
 
-echo "Run from script"
+echo "Run from script - $1"

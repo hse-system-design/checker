@@ -1,6 +1,8 @@
 pipeline {
     agent any
-
+    parameters {
+        string(name: 'HW_NUM', defaultValue: '0', description: 'Number of HW')
+    }
     stages {
         stage('Hello') {
             steps {
@@ -8,7 +10,7 @@ pipeline {
             }
         }
         stage('Run sh') {
-            sh 'run.sh'
+            sh 'run.sh ${}'
         }
     }
 }
