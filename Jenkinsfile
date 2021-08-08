@@ -51,7 +51,8 @@ pipeline {
 
                         sh 'sleep 30'
 
-                        sshCommand remote: remote, sudo: true, command: 'apt install python3-pip -y'
+                        sshCommand remote: remote, sudo: true, command: 'apt-get update'
+                        sshCommand remote: remote, sudo: true, command: 'apt-get install python3-pip -y'
                         sshCommand remote: remote, command: 'pip3 install -r requirements.txt'
                     }
                 }
