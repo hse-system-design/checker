@@ -3,7 +3,7 @@
 set -xe
 
 TANK_NAME=${1:-default}
-KEY_PATH=${2:~/.ssh/id_rsa.pub}
+KEY_PATH=$2
 
 yc compute instance create \
 --name yandex-tank-$TANK_NAME \
