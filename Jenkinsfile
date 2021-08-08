@@ -19,5 +19,15 @@ pipeline {
                 }
             }
         }
-    }
+        stage('Test') {
+            steps {
+                echo cluster_ip
+            }
+        }
+        stage('Destroy resources') {
+            steps {
+                sh 'bash ./destroy-k8s.sh general'
+            }
+        }
+     }
 }
