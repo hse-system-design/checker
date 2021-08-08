@@ -32,7 +32,7 @@ pipeline {
         }
         stage('Prepare tank') {
             steps {
-                stript {
+                script {
                     echo cluster_ip
                     echo tank_ip
 
