@@ -11,7 +11,7 @@ pipeline {
         }
         stage('Run sh') {
             steps {
-                sh 'ls && echo ${}'
+                sh 'bash ./run.sh ${HW_NUM}'
             }
         }
     }
