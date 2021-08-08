@@ -1,4 +1,4 @@
-def CLUSTER_IP = ""
+def cluster_ip = ""
 
 pipeline {
     agent any
@@ -13,8 +13,8 @@ pipeline {
         }
         stage('Deploy k8s cluster') {
             steps {
-                CLUSTER_IP = sh(script: 'bash ./deploy-k8s.sh general ./hw-${HW_NUM}/cluster-config.json', returnStdout: true)
-                echo CLUSTER_IP
+                cluster_ip = sh(script: 'bash ./deploy-k8s.sh general ./hw-${HW_NUM}/cluster-config.json', returnStdout: true).trim()
+                echo cluster_ip
             }
         }
     }
