@@ -11,7 +11,7 @@ pipeline {
         }
         stage('Run sh') {
             steps {
-                sh './run.sh ${}'
+                sh 'ls && echo ${}'
             }
         }
     }
