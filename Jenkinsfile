@@ -44,7 +44,7 @@ pipeline {
                         remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa'
                         remote.allowAnyHosts = true
 
-                        def tests_file = 'hw-${HW_NUM}/tests.py'
+                        def tests_file = 'hw-' + HW_NUM + '/tests.py'
 
                         sshPut remote: remote, from: 'requirements.txt', into: "requirements.txt"
                         sshPut remote: remote, from: tests_file, into: "tests.py"
