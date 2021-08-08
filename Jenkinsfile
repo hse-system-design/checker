@@ -30,16 +30,29 @@ pipeline {
                 }
             }
         }
-        stage('Test') {
+        stage('Prepare tank') {
             steps {
                 echo cluster_ip
                 echo tank_ip
+
+                def remote = [:]
+                remote.name = 'yandex-tank'
+                remote.host = tank_ip
+                remote.user = 'yc-user'
+                remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa.pub'
+                remote.allowAnyHosts = true
+
+                sshPut remote: remote, from: 'requirements.txt', into: "requirements.txt"
+                sshPut remote: remote, from: 'hw-${HW_NUM}/tests.py', into: "tests.py"
+
+                sshCommand remote: remote, sudo: true, command: 'apt install python3-pip'
+                sshCommand remote: remote, command: 'pip3 install -r requirements.txt'
             }
         }
         stage('Destroy resources') {
             steps {
                 sh 'bash ./destroy-k8s.sh general'
-                sh 'bash ./destroy-tank.sh general'
+                //sh 'bash ./destroy-tank.sh general'
             }
         }
      }
