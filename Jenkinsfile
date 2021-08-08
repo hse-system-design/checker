@@ -13,8 +13,10 @@ pipeline {
         }
         stage('Deploy k8s cluster') {
             steps {
-                cluster_ip = sh(script: 'bash ./deploy-k8s.sh general ./hw-${HW_NUM}/cluster-config.json', returnStdout: true).trim()
-                echo cluster_ip
+                script {
+                    cluster_ip = sh(script: 'bash ./deploy-k8s.sh general ./hw-${HW_NUM}/cluster-config.json', returnStdout: true).trim()
+                    echo cluster_ip
+                }
             }
         }
     }
