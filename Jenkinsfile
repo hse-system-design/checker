@@ -49,7 +49,9 @@ pipeline {
                         sshPut remote: remote, from: 'requirements.txt', into: "requirements.txt"
                         sshPut remote: remote, from: tests_file, into: "tests.py"
 
-                        sshCommand remote: remote, sudo: true, command: 'apt install python3-pip'
+                        sh 'sleep 30'
+
+                        sshCommand remote: remote, sudo: true, command: 'apt install python3-pip -y'
                         sshCommand remote: remote, command: 'pip3 install -r requirements.txt'
                     }
                 }
