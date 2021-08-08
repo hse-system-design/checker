@@ -1,4 +1,5 @@
 def cluster_ip = ""
+def tank_ip = ""
 
 pipeline {
     agent any
@@ -14,19 +15,31 @@ pipeline {
         stage('Deploy k8s cluster') {
             steps {
                 script {
-                    cluster_ip = sh(script: 'bash ./deploy-k8s.sh general ./hw-${HW_NUM}/cluster-config.json', returnStdout: true).trim()
+                    sh 'bash ./deploy-k8s.sh general ./hw-${HW_NUM}/cluster-config.json'
+                    cluster_ip = readFile(file: 'cluster_ip.txt').trim()
                     echo cluster_ip
+                }
+            }
+        }
+        stage('Deploy yandex tank') {
+            steps {
+                script {
+                    sh 'bash ./deploy-tank.sh general /var/lib/jenkins/.ssh/id_rsa.pub'
+                    tank_ip = readFile(file: 'tank_ip.txt').trim()
+                    echo tank_ip
                 }
             }
         }
         stage('Test') {
             steps {
                 echo cluster_ip
+                echo tank_ip
             }
         }
         stage('Destroy resources') {
             steps {
                 sh 'bash ./destroy-k8s.sh general'
+                sh 'bash ./destroy-tank.sh general'
             }
         }
      }

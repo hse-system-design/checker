@@ -36,4 +36,4 @@ yc managed-kubernetes node-group create \
 yc managed-kubernetes cluster get-credentials --external --name k8s-$CLUSTER_NAME --force
 
 CLUSTER_IP=`kubectl get nodes -o json | jq -r '.items[0].status.addresses[] | select(.type=="ExternalIP") | .address'`
-echo $CLUSTER_IP
+echo $CLUSTER_IP > cluster_ip.txt
