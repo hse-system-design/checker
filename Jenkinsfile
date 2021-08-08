@@ -10,7 +10,9 @@ pipeline {
             }
         }
         stage('Run sh') {
-            sh 'run.sh ${}'
+            steps {
+                sh 'run.sh ${}'
+            }
         }
     }
 }
