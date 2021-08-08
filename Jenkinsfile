@@ -44,8 +44,10 @@ pipeline {
                         remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa'
                         remote.allowAnyHosts = true
 
+                        def tests_file = 'hw-${HW_NUM}/tests.py'
+
                         sshPut remote: remote, from: 'requirements.txt', into: "requirements.txt"
-                        sshPut remote: remote, from: 'hw-${HW_NUM}/tests.py', into: "tests.py"
+                        sshPut remote: remote, from: tests_file, into: "tests.py"
 
                         sshCommand remote: remote, sudo: true, command: 'apt install python3-pip'
                         sshCommand remote: remote, command: 'pip3 install -r requirements.txt'
