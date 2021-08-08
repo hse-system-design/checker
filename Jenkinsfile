@@ -58,7 +58,7 @@ pipeline {
         stage('Destroy resources') {
             steps {
                 sh 'bash ./destroy-k8s.sh general'
-                //sh 'bash ./destroy-tank.sh general'
+                sh 'bash ./destroy-tank.sh general'
             }
         }
      }
