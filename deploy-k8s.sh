@@ -7,7 +7,7 @@ CONFIG_PATH=$2
 
 NODES=`cat $CONFIG_PATH | jq -r .nodes`
 CPU=`cat $CONFIG_PATH | jq -r .cpu`
-RAM=`car $CONFIG_PATH | jq -r .ram`
+RAM=`cat $CONFIG_PATH | jq -r .ram`
 
 FOLDER_ID=$(yc config get folder-id)
 RES_SA_ID=$(yc iam service-account get --name k8s-res-sa-${FOLDER_ID} --format json | jq .id -r)
