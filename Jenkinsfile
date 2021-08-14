@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Sanity check') {
             steps {
-                if TESTED_REPO == '' {
+                if (TESTED_REPO == '') {
                     currentBuild.result = 'ABORTED'
                     error("No TESTED_REPO variable")
                 }
