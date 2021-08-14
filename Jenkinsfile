@@ -5,11 +5,15 @@ pipeline {
     agent any
     parameters {
         string(name: 'HW_NUM', defaultValue: '0', description: 'Number of HW')
+        string(name: 'TESTED_REPO', defaultValue: '', description: 'Link to github repo')
     }
     stages {
-        stage('Hello') {
+        stage('Sanity check') {
             steps {
-                echo 'Hello World'
+                if TESTED_REPO == '' {
+                    currentBuild.result = 'ABORTED'
+                    error("No TESTED_REPO variable")
+                }
             }
         }
         stage('Deploy k8s cluster') {
@@ -45,9 +49,11 @@ pipeline {
                         remote.allowAnyHosts = true
 
                         def tests_file = 'hw-' + HW_NUM + '/tests.py'
+                        def conftest_file = 'hw-' + HW_NUM + '/conftest.py'
 
                         sshPut remote: remote, from: 'requirements.txt', into: "requirements.txt"
                         sshPut remote: remote, from: tests_file, into: "tests.py"
+                        sshPut remote: remote, from: conftest_file, into: "conftest.py"
 
                         sh 'sleep 30'
 
@@ -58,11 +64,43 @@ pipeline {
                 }
             }
         }
-        stage('Destroy resources') {
+        stage('Prepare cluster') {
             steps {
-                sh 'bash ./destroy-k8s.sh general'
-                sh 'bash ./destroy-tank.sh general'
+                sh 'git clone ${TESTED_REPO} repo'
+                sh 'kubectl apply -f repo/k8s-cluster.yaml'
+
+                sh 'sleep 60'
+            }
+        }
+        stage('Run tests') {
+            steps {
+                script {
+                        echo cluster_ip
+                        echo tank_ip
+
+                        def remote = [:]
+                        remote.name = 'yandex-tank'
+                        remote.host = tank_ip
+                        remote.user = 'yc-user'
+                        remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa'
+                        remote.allowAnyHosts = true
+
+                        def test_sh = 'pytest -q --workdir /workdir --cluster_ip ' + cluster_ip + ' tests.py'
+
+                        sshCommand remote: remote, sudo: true, command: test_sh
+                        sshGet remote: remote, from: '/workdir/tank-results.json', into: "tank-results.json"
+                    }
             }
         }
      }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'tank-results.json', fingerprint: true
+//             junit 'build/reports/**/*.xml'
+
+            sh 'bash ./destroy-k8s.sh general'
+//             sh 'bash ./destroy-tank.sh general'
+        }
+    }
 }
