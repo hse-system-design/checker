@@ -10,9 +10,11 @@ pipeline {
     stages {
         stage('Sanity check') {
             steps {
-                if (TESTED_REPO == '') {
-                    currentBuild.result = 'ABORTED'
-                    error("No TESTED_REPO variable")
+                script {
+                    if (TESTED_REPO == '') {
+                        currentBuild.result = 'ABORTED'
+                        error("No TESTED_REPO variable")
+                    }
                 }
             }
         }
@@ -66,10 +68,12 @@ pipeline {
         }
         stage('Prepare cluster') {
             steps {
-                sh 'git clone ${TESTED_REPO} repo'
-                sh 'kubectl apply -f repo/k8s-cluster.yaml'
+                script {
+                    sh 'git clone ${TESTED_REPO} repo'
+                    sh 'kubectl apply -f repo/k8s-cluster.yaml'
 
-                sh 'sleep 60'
+                    sh 'sleep 60'
+                }
             }
         }
         stage('Run tests') {
