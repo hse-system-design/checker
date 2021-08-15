@@ -95,10 +95,11 @@ pipeline {
                         remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa'
                         remote.allowAnyHosts = true
 
-                        def test_sh = 'pytest -q --workdir /workdir --cluster_ip ' + cluster_ip + ' tests.py'
+                        def test_sh = 'pytest --junitxml=/workdir/junit.xml -q --workdir /workdir --cluster_ip ' + cluster_ip + ' tests.py'
 
                         sshCommand remote: remote, sudo: true, command: test_sh
                         sshGet remote: remote, from: '/workdir/tank-results.json', into: "tank-results.json"
+                        sshGet remote: remote, from: '/workdir/junit.xml', into: "junit.xml"
                     }
             }
         }
@@ -107,7 +108,7 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'tank-results.json', fingerprint: true
-//             junit 'build/reports/**/*.xml'
+            junit 'junit.xml'
 
             sh 'bash ./destroy-k8s.sh general'
             sh 'bash ./destroy-tank.sh general'

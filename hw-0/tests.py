@@ -51,7 +51,6 @@ def test_shoot_from_a_tank(bullets, ammo_writer, tank_load_conf_writer, tank_res
 
     results = tank_results_getter()
     q50, q90 = numpy.quantile(results['root'], [0.5, 0.9])
-    assert q50 < q90
 
     final_results_writer({
         'root': {
