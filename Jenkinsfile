@@ -69,8 +69,8 @@ pipeline {
         stage('Prepare cluster') {
             steps {
                 script {
-                    sh 'git clone ${TESTED_REPO} repo'
-                    sh 'kubectl apply -f repo/k8s-cluster.yaml'
+                    sh 'git clone ${TESTED_REPO} cluster-repo'
+                    sh 'kubectl apply -f cluster-repo/k8s-cluster.yaml'
 
                     sh 'sleep 60'
                 }
@@ -104,7 +104,7 @@ pipeline {
 //             junit 'build/reports/**/*.xml'
 
             sh 'bash ./destroy-k8s.sh general'
-//             sh 'bash ./destroy-tank.sh general'
+            sh 'bash ./destroy-tank.sh general'
         }
     }
 }
