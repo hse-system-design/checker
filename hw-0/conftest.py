@@ -14,7 +14,7 @@ phantom:
   address: {ip}:{port}
   load_profile:
     load_type: rps
-    schedule: line(1, 10, 10m)
+    schedule: line(1, 10, 1m)
 console:
   enabled: false
 telegraf:
