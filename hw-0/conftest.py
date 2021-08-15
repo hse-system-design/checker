@@ -68,7 +68,7 @@ def ammo_writer(workdir):
         with open(ammofilename, 'w') as f:
             for b in bullets:
                 f.write(b.to_ammo_format())
-        return ammofilename
+        return pathlib.Path(ammofilename).name
     return _write
 
 
@@ -78,7 +78,7 @@ def tank_load_conf_writer(workdir, cluster_ip, cluster_port):
         configfilename = str(pathlib.Path(workdir) / 'load.yaml')
         with open(configfilename, "w") as f:
             f.write(_tank_yaml_conf_template.format(ip=cluster_ip, port=cluster_port))
-        return configfilename
+        return pathlib.Path(configfilename).name
     return _write
 
 
