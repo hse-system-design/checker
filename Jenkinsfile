@@ -3,6 +3,9 @@ def tank_ip = ""
 
 pipeline {
     agent any
+    options {
+        skipDefaultCheckout(true)
+    }
     parameters {
         string(name: 'HW_NUM', defaultValue: '0', description: 'Number of HW')
         string(name: 'TESTED_REPO', defaultValue: '', description: 'Link to github repo')
@@ -15,6 +18,9 @@ pipeline {
                         currentBuild.result = 'ABORTED'
                         error("No TESTED_REPO variable")
                     }
+                    cleanWs()
+                    checkout scm
+                    echo "Building ${env.JOB_NAME}..."
                 }
             }
         }
