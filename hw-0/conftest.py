@@ -91,7 +91,7 @@ def tank_results_getter(workdir):
             r = csv.reader(f, delimiter='\t')
             for row in r:
                 tag = row[1]
-                latency = row[5]
+                latency = float(row[5])
                 results[tag].append(latency)
         return results
     return _get
