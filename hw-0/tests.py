@@ -34,7 +34,8 @@ def test_ping(cluster_url, bullets):
         method="GET",
         path_url=str(cluster_url),
         tag="root"
-    ), Bullet(
+    ))
+    bullets.append(Bullet(
         method="GET",
         path_url=str(cluster_url),
         tag="root"

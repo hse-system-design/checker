@@ -54,10 +54,9 @@ def bullets():
 @pytest.fixture(scope="session")
 def workdir(request):
     workdirname = request.config.option.workdir
-    if os.path.isdir(workdirname):
-        return workdirname
+    if not os.path.isdir(workdirname):
+        os.mkdir(workdirname)
 
-    os.mkdir(workdirname)
     os.chdir(workdirname)
     return workdirname
 
