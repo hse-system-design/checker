@@ -14,7 +14,7 @@ phantom:
   address: {ip}:{port}
   load_profile:
     load_type: rps
-    schedule: line(1, 10, 1m)
+    schedule: const(100, 10m)
 console:
   enabled: false
 telegraf:
@@ -46,12 +46,6 @@ def cluster_url(cluster_ip, cluster_port):
 
 
 @pytest.fixture(scope="session")
-def bullets():
-    bullet_list = []
-    return bullet_list
-
-
-@pytest.fixture(scope="session")
 def workdir(request):
     workdirname = request.config.option.workdir
     if not os.path.isdir(workdirname):
@@ -62,11 +56,11 @@ def workdir(request):
 
 
 @pytest.fixture
-def ammo_writer(workdir):
-    def _write(bullets):
+def ammo_writer(workdir, cluster_url):
+    def _write(generate_requests, num):
         ammofilename = str(pathlib.Path(workdir) / 'ammo.txt')
         with open(ammofilename, 'w') as f:
-            for b in bullets:
+            for b in generate_requests(cluster_url, num):
                 f.write(b.to_ammo_format())
         return pathlib.Path(ammofilename).name
     return _write
