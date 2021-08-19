@@ -84,32 +84,49 @@ pipeline {
         }
         stage('Run tests') {
             steps {
-                script {
-                        echo cluster_ip
-                        echo tank_ip
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    script {
+                            echo cluster_ip
+                            echo tank_ip
 
-                        def remote = [:]
-                        remote.name = 'yandex-tank'
-                        remote.host = tank_ip
-                        remote.user = 'yc-user'
-                        remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa'
-                        remote.allowAnyHosts = true
+                            def remote = [:]
+                            remote.name = 'yandex-tank'
+                            remote.host = tank_ip
+                            remote.user = 'yc-user'
+                            remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa'
+                            remote.allowAnyHosts = true
 
-                        def test_sh = 'pytest --junitxml=/workdir/junit.xml -q --workdir /workdir --cluster_ip ' + cluster_ip + ' tests.py'
+                            def test_sh = 'pytest --junitxml=/workdir/junit.xml -q --workdir /workdir --cluster_ip ' + cluster_ip + ' tests.py'
 
-                        sshCommand remote: remote, sudo: true, command: test_sh
-                        sshGet remote: remote, from: '/workdir/tank-results.json', into: "tank-results.json"
-                        sshGet remote: remote, from: '/workdir/junit.xml', into: "junit.xml"
+                            sshCommand remote: remote, sudo: true, command: test_sh
+                            sshGet remote: remote, from: '/workdir/tank-results.json', into: "tank-results.json"
+                            sshGet remote: remote, from: '/workdir/junit.xml', into: "junit.xml"
                     }
+                }
+            }
+        }
+        stage('Grab test results') {
+            steps {
+                script {
+                    def remote = [:]
+                    remote.name = 'yandex-tank'
+                    remote.host = tank_ip
+                    remote.user = 'yc-user'
+                    remote.identityFile = '/var/lib/jenkins/.ssh/id_rsa'
+                    remote.allowAnyHosts = true
+
+                    sshGet remote: remote, from: '/workdir/tank-results.json', into: "tank-results.json"
+                    sshGet remote: remote, from: '/workdir/junit.xml', into: "junit.xml"
+
+                    archiveArtifacts artifacts: 'tank-results.json', fingerprint: true
+                    junit 'junit.xml'
+                }
             }
         }
      }
 
     post {
         always {
-            archiveArtifacts artifacts: 'tank-results.json', fingerprint: true
-            junit 'junit.xml'
-
             sh 'bash ./destroy-k8s.sh general'
             sh 'bash ./destroy-tank.sh general'
         }
