@@ -99,8 +99,6 @@ pipeline {
                             def test_sh = 'pytest --junitxml=/workdir/junit.xml -q --workdir /workdir --cluster_ip ' + cluster_ip + ' tests.py'
 
                             sshCommand remote: remote, sudo: true, command: test_sh
-                            sshGet remote: remote, from: '/workdir/tank-results.json', into: "tank-results.json"
-                            sshGet remote: remote, from: '/workdir/junit.xml', into: "junit.xml"
                     }
                 }
             }
