@@ -47,7 +47,7 @@ def test_short_link(cluster_url):
     assert 'ShortUrl' in data
     assert data['ShortUrl'] != ""
 
-    r = requests.get(data["ShortUrl"], allow_redirects=False)
+    r = requests.get(str(cluster_url / data["ShortUrl"]), allow_redirects=False)
     assert r.status_code == 307
     assert r.headers['Location'] == 'http://yandex.ru'
 
