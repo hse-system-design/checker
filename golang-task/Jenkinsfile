@@ -25,6 +25,7 @@ pipeline {
             steps {
                 script {
                     sh 'curl ${GIST_MAIN_URL} > golang-task/main.go'
+                    sh 'cd golang-task && go mod tidy'
                 }
             }
         }
