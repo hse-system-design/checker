@@ -16,7 +16,7 @@ pipeline {
                         currentBuild.result = 'ABORTED'
                         error("Not all required parameters are specified.")
                     }
-                    if !GITHUB_CLONE_URL.startsWith("git@github.com") {
+                    if (!GITHUB_CLONE_URL.startsWith("git@github.com")) {
                         currentBuild.result = 'ABORTED'
                         error("GITHUB_CLONE_URL doesn't seem to use SSH scheme")
                     }
