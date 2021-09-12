@@ -54,10 +54,10 @@ pipeline {
         }
         stage('Run solution') {
             steps {
-                sh 'echo Run solution container'
+                echo 'echo Run solution container'
                 sh 'docker run -d -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id.txt'
                 sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id.txt` >solution_container_ip.txt"
-                sh 'echo container is is `cat solution_container_id.txt`, ip is `solution_container_ip.txt`'
+                echo 'echo container is is `cat solution_container_id.txt`, ip is `solution_container_ip.txt`'
             }
         }
         stage('Run tests') {
@@ -67,7 +67,7 @@ pipeline {
                         sh 'ls'
                         sh 'pwd'
                         sh 'cd baseline && go mod tidy'
-                        sh 'cd baseline && API_URL=`cat solution_container_ip.txt` go test -v -timeout 120s ./src/apitest'
+                        sh 'cd baseline && API_URL=`cat solution_container_ip.txt` go test -v -timeout 120s ./src/apitest' // TODO: надо как-то скормить результаты тестов дженкинсу в JUnit формате
                     }
                 }
             }
