@@ -24,7 +24,7 @@ pipeline {
         stage('Run tests') {
             steps {
                 script {
-                    docker.image('golang:1.16').inside {
+                    docker.image('golang:1.16').withRun('-e XDG_CACHE_HOME=/tmp/.tmpcache').inside {
                         sh 'curl ${GIST_MAIN_URL} > golang-task/main.go'
                         sh 'cd golang-task && go mod tidy'
                         sh 'cd golang-task && go test -v -timeout 2s'
