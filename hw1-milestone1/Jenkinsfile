@@ -39,6 +39,8 @@ pipeline {
                 script {
                     sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/hse_system_design_bot_github && git clone ${GITHUB_CLONE_URL} solution'
                     sh 'cd solution && git checkout ${GIT_COMMIT_HASH} && cd ..'
+
+                    // actually, this should never fail because github would reject an attempt to push 40 hex tags.
                     sh 'cd solution && [ "${GIT_COMMIT_HASH}" =  `git rev-parse HEAD` ] || (echo "GIT_COMMIT_HASH seems to be a branch or label" && false)'
                 }
             }
