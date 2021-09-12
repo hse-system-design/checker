@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+    options {
+        skipDefaultCheckout(true)
+    }
+    parameters {
+        string(name: 'STUDENT_NAME', defaultValue: '', description: 'Name of student')
+        string(name: 'GITHUB_CLONE_URL', defaultValue: '', description: 'Github repository clone URL (use SSH scheme). NOTE: hse-system-design-bot must have read access to it.')
+        string(name: 'GIT_COMMIT_HASH', defaultValue: '', description: 'Commit id of your solution in the repository')
+    }
+    stages {
+        stage('Sanity check') {
+            steps {
+                script {
+                    if (STUDENT_NAME == '' || GITHUB_CLONE_URL == '' || GIT_COMMIT_HASH == '') {
+                        currentBuild.result = 'ABORTED'
+                        error("Not all required parameters are specified.")
+                    }
+                    if !GITHUB_CLONE_URL.startsWith("git@github.com") {
+                        currentBuild.result = 'ABORTED'
+                        error("GITHUB_CLONE_URL doesn't seem to use SSH scheme")
+                    }
+                    cleanWs()
+                    checkout scm
+                    echo "Building ${env.JOB_NAME}..."
+                }
+            }
+        }
+        stage('Clone solution repository') {
+            steps {
+                script {
+                    sh 'git clone ${GITHUB_CLONE_URL} solution'
+                    sh 'cd solution && git checkout ${GIT_COMMIT_HASH} && cd ..'
+                }
+            }
+        }
+        stage('Clone baseline repository') {
+            steps {
+                script {
+                    sh 'git clone git@github.com:hse-system-design-2021/baseline-hw-1.git baseline'
+                    sh 'cd baseline && git checkout milestone1 && cd ..'
+                }
+            }
+        }
+
+        def solutionImageName = java.util.UUID.randomUUID().toString() + ":latest"
+        stage('Build solution image') {
+            steps {
+                sh 'docker build -t ${solutionImageName} solution'
+            }
+        }
+        stage('Build solution image') {
+            steps {
+                sh 'docker build -t ${solutionImageName} solution'
+            }
+        }
+        stage('Run solution') {
+            steps {
+                sh 'echo Run solution container'
+                sh 'docker run -d -e SERVER_PORT=8080 ${solutionImageName} >solution_container_id.txt'
+                sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id.txt` >solution_container_ip"
+                sh 'echo container is is `cat solution_container_id.txt`, ip is `solution_container_ip.txt`'
+            }
+        }
+        stage('Run tests') {
+            steps {
+                script {
+                    docker.image('golang:1.16').inside {
+                        sh 'ls'
+                        sh 'pwd'
+                        sh 'export API_URL=`cat solution_container_ip`'
+                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && go test -v -timeout 120s ./src/apitest'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker kill `cat solution_container_ip` || echo "Failed to kill solution docker container, maybe it didnt start"'
+            // TODO: остановить запущенные в detached режиме контейнеры
+        }
+    }
+}
