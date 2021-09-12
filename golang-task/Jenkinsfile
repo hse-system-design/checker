@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'golang:1.16'
-            args '-v ${PWD}:/go/src/app -w /go/src/app'
-        }
-    }
+    agent any
     options {
         skipDefaultCheckout(true)
     }
@@ -26,20 +21,14 @@ pipeline {
                 }
             }
         }
-        stage('Get main.go') {
-            steps {
-                script {
-                    sh 'pwd'
-                    sh 'ls'
-                    sh 'curl ${GIST_MAIN_URL} > golang-task/main.go'
-                    sh 'cd golang-task && go mod tidy'
-                }
-            }
-        }
         stage('Run tests') {
             steps {
                 script {
-                    sh 'cd golang-task && go test -v -timeout 2s'
+                    docker.image('golang:1.16').inside {
+                        sh 'curl ${GIST_MAIN_URL} > golang-task/main.go'
+                        sh 'cd golang-task && go mod tidy'
+                        sh 'cd golang-task && go test -v -timeout 2s'
+                    }
                 }
             }
         }
