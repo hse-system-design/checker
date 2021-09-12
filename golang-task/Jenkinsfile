@@ -28,6 +28,8 @@ pipeline {
         stage('Get main.go') {
             steps {
                 script {
+                    sh 'pwd'
+                    sh 'ls'
                     sh 'curl ${GIST_MAIN_URL} > golang-task/main.go'
                     sh 'cd golang-task && go mod tidy'
                 }
