@@ -33,7 +33,7 @@ pipeline {
         stage('Clone solution repository') {
             steps {
                 script {
-                    sh 'git clone ${GITHUB_CLONE_URL} solution'
+                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/hse_system_design_bot_github && git clone ${GITHUB_CLONE_URL} solution'
                     sh 'cd solution && git checkout ${GIT_COMMIT_HASH} && cd ..'
                 }
             }
@@ -41,7 +41,7 @@ pipeline {
         stage('Clone baseline repository') {
             steps {
                 script {
-                    sh 'git clone git@github.com:hse-system-design-2021/baseline-hw-1.git baseline'
+                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/hse_system_design_bot_github &&  git clone git@github.com:hse-system-design-2021/baseline-hw-1.git baseline'
                     sh 'cd baseline && git checkout milestone1 && cd ..'
                 }
             }
