@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        SOLUTION_IMAGE_NAME = java.util.UUID.randomUUID().toString() + ":latest"
+    }
     options {
         skipDefaultCheckout(true)
     }
@@ -43,12 +46,6 @@ pipeline {
             }
         }
 
-        def solutionImageName = java.util.UUID.randomUUID().toString() + ":latest"
-        stage('Build solution image') {
-            steps {
-                sh 'docker build -t ${solutionImageName} solution'
-            }
-        }
         stage('Build solution image') {
             steps {
                 sh 'docker build -t ${solutionImageName} solution'
@@ -68,9 +65,8 @@ pipeline {
                     docker.image('golang:1.16').inside {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'export API_URL=`cat solution_container_ip`'
                         sh 'cd baseline && go mod tidy'
-                        sh 'cd baseline && go test -v -timeout 120s ./src/apitest'
+                        sh 'cd baseline && API_URL=`cat solution_container_ip` go test -v -timeout 120s ./src/apitest'
                     }
                 }
             }
