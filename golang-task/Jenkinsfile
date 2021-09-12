@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+    options {
+        skipDefaultCheckout(true)
+    }
+    parameters {
+        string(name: 'STUDENT_NAME', defaultValue: '', description: 'Name of student')
+        string(name: 'GIST_MAIN_URL', defaultValue: '', description: 'Link to main.go from raw gist on GitHub')
+    }
+    stages {
+        stage('Sanity check') {
+            steps {
+                script {
+                    if (GIST_MAIN_URL == '' || STUDENT_NAME == '') {
+                        currentBuild.result = 'ABORTED'
+                        error("No GIST_MAIN_URL or STUDENT_NAME variable")
+                    }
+                    cleanWs()
+                    checkout scm
+                    echo "Building ${env.JOB_NAME}..."
+                }
+            }
+        }
+        stage('Get main.go') {
+            steps {
+                script {
+                    sh 'curl ${GIST_MAIN_URL} > golang-task/main.go'
+                }
+            }
+        }
+        stage('Run tests') {
+            steps {
+                script {
+                    sh 'cd golang-task && go test -v -timeout 2s'
+                }
+            }
+        }
+    }
+}

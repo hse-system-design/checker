@@ -16,7 +16,7 @@ yc managed-kubernetes cluster create \
 --name k8s-$CLUSTER_NAME \
 --network-name default \
 --zone ru-central1-a \
- --subnet-name default-ru-central1-a \
+--subnet-name default-ru-central1-a \
 --public-ip \
 --service-account-id $RES_SA_ID \
 --node-service-account-id $RES_SA_ID
