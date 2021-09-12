@@ -1,8 +1,7 @@
 pipeline {
     agent {
         docker {
-            image: 'golang:1.16'
-            registryUrl: 'https://registry.hub.docker.com'
+            image 'golang:1.16'
         }
     }
     options {
