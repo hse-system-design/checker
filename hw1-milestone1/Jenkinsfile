@@ -24,7 +24,7 @@ pipeline {
                         currentBuild.result = 'ABORTED'
                         error("GITHUB_CLONE_URL doesn't seem to use SSH scheme")
                     }
-                    if (!GIT_COMMIT_HASH.matches("^[0-9a-f]{40}$")) {
+                    if (!GIT_COMMIT_HASH.matches("^[0-9a-f]{40}\$")) {
                         currentBuild.result = 'ABORTED'
                         error("GIT_COMMIT_HASH doesn't seem to be a SHA-1 hash. Please, specify full commit hash here. Don't use tags or branches")
                     }
