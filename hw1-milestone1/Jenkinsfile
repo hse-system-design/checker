@@ -67,7 +67,7 @@ pipeline {
                         sh 'ls'
                         sh 'pwd'
                         sh 'cd baseline && go mod tidy'
-                        sh 'cd baseline && API_URL=`cat ../solution_container_ip.txt` go test -v -timeout 120s ./src/apitest' // TODO: надо как-то скормить результаты тестов дженкинсу в JUnit формате
+                        sh 'cd baseline && API_URL=`cat ../solution_container_ip.txt` GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest' // TODO: надо как-то скормить результаты тестов дженкинсу в JUnit формате
                     }
                 }
             }
