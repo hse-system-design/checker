@@ -68,7 +68,7 @@ pipeline {
                 script {
                     echo 'Run solution container'
                     sh 'docker run -d -e STORAGE_MODE=inmemory -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id0.txt'
-                    sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id0.txt` >solution_container_ip.txt"
+                    sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id0.txt` >solution_container_ip0.txt"
                     sh 'echo Container id is `cat solution_container_id0.txt`, ip is `solution_container_ip0.txt`'
                 }
             }
