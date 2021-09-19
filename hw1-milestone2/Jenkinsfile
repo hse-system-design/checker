@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        SOLUTION_IMAGE_NAME = "hw1-milestone1-solution:build$BUILD_NUMBER"
+        SOLUTION_IMAGE_NAME = "hw1-milestone2-solution:build$BUILD_NUMBER"
     }
     options {
         skipDefaultCheckout(true)
@@ -69,7 +69,7 @@ pipeline {
                     echo 'Run solution container'
                     sh 'docker run -d -e STORAGE_MODE=inmemory -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id0.txt'
                     sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id0.txt` >solution_container_ip.txt"
-                    echo 'Container id is `cat solution_container_id0.txt`, ip is `solution_container_ip0.txt`'
+                    sh 'echo Container id is `cat solution_container_id0.txt`, ip is `solution_container_ip0.txt`'
                 }
             }
         }
@@ -96,12 +96,12 @@ pipeline {
                     echo 'Run first solution container'
                     sh 'docker run -d -e STORAGE_MODE=mongo -e MONGO_URL=mongodb://`cat mongo_container_ip.txt`:27017 MONGO_DBNAME=microblog -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id1.txt'
                     sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id1.txt` >solution_container_ip1.txt"
-                    echo 'First container id is `cat solution_container_id1.txt`, ip is `solution_container_ip1.txt`'
+                    sh 'echo First container id is `cat solution_container_id1.txt`, ip is `solution_container_ip1.txt`'
 
                     echo 'Run second solution container'
                     sh 'docker run -d -e STORAGE_MODE=mongo -e MONGO_URL=mongodb://`cat mongo_container_ip.txt`:27017 MONGO_DBNAME=microblog -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id2.txt'
                     sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id2.txt` >solution_container_ip2.txt"
-                    echo 'Second container id is `cat solution_container_id2.txt`, ip is `solution_container_ip2.txt`'
+                    sh 'echo Second container id is `cat solution_container_id2.txt`, ip is `solution_container_ip2.txt`'
                 }
             }
         }
