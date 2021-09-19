@@ -123,7 +123,7 @@ pipeline {
         always {
             sh 'docker kill `cat solution_container_id0.txt` || echo "Failed to kill first solution docker container, maybe it didnt start"'
 
-            sh 'docker kill cat mongo_container_id.txt || echo "Failed to kill mongo container, maybe it didnt start"'
+            sh 'docker kill `cat mongo_container_id.txt` || echo "Failed to kill mongo container, maybe it didnt start"'
             sh 'docker kill `cat solution_container_id1.txt` || echo "Failed to kill first mongo solution docker container, maybe it didnt start"'
             sh 'docker kill `cat solution_container_id2.txt` || echo "Failed to kill second mongo solution docker container, maybe it didnt start"'
         }
