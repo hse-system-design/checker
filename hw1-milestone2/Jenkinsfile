@@ -1,0 +1,131 @@
+pipeline {
+    agent any
+    environment {
+        SOLUTION_IMAGE_NAME = "hw1-milestone1-solution:build$BUILD_NUMBER"
+    }
+    options {
+        skipDefaultCheckout(true)
+    }
+    parameters {
+        string(name: 'STUDENT_NAME', defaultValue: '', description: 'Name of student')
+        string(name: 'GITHUB_CLONE_URL', defaultValue: '', description: 'Github repository clone URL (use SSH scheme). NOTE: hse-system-design-bot must have read access to it.')
+        string(name: 'GIT_COMMIT_HASH', defaultValue: '', description: 'Commit id of your solution in the repository')
+    }
+    stages {
+        stage('Sanity check') {
+            steps {
+                script {
+                    if (STUDENT_NAME == '' || GITHUB_CLONE_URL == '' || GIT_COMMIT_HASH == '') {
+                        currentBuild.result = 'ABORTED'
+                        error("Not all required parameters are specified.")
+                    }
+                    if (STUDENT_NAME)
+                    if (!GITHUB_CLONE_URL.startsWith("git@github.com")) {
+                        currentBuild.result = 'ABORTED'
+                        error("GITHUB_CLONE_URL doesn't seem to use SSH scheme")
+                    }
+                    if (!GIT_COMMIT_HASH.matches("^[0-9a-f]{40}\$")) {
+                        currentBuild.result = 'ABORTED'
+                        error("GIT_COMMIT_HASH doesn't seem to be a SHA-1 hash. Please, specify full commit hash here. Don't use tags or branches")
+                    }
+                    cleanWs()
+                    checkout scm
+                    echo "Building ${env.JOB_NAME}..."
+                }
+            }
+        }
+        stage('Clone solution repository') {
+            steps {
+                script {
+                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/hse_system_design_bot_github && git clone ${GITHUB_CLONE_URL} solution'
+                    sh 'cd solution && git checkout ${GIT_COMMIT_HASH} && cd ..'
+
+                    // actually, this should never fail because github would reject an attempt to push 40 hex tags.
+                    sh 'cd solution && [ "${GIT_COMMIT_HASH}" =  `git rev-parse HEAD` ] || (echo "GIT_COMMIT_HASH seems to be a branch or label" && false)'
+                }
+            }
+        }
+        stage('Clone baseline repository') {
+            steps {
+                script {
+                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/hse_system_design_bot_github && git clone git@github.com:hse-system-design-2021/baseline-hw-1.git baseline'
+                    sh 'cd baseline && git checkout milestone2 && cd ..'
+                }
+            }
+        }
+
+        stage('Build solution image') {
+            steps {
+                script {
+                    sh 'docker build -t ${SOLUTION_IMAGE_NAME} solution'
+                }
+            }
+        }
+
+
+        stage('Run in-memory solution') {
+            steps {
+                script {
+                    echo 'Run solution container'
+                    sh 'docker run -d -e STORAGE_MODE=inmemory -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id0.txt'
+                    sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id0.txt` >solution_container_ip.txt"
+                    echo 'Container id is `cat solution_container_id0.txt`, ip is `solution_container_ip0.txt`'
+                }
+            }
+        }
+        stage('Run in-memory tests') {
+            steps {
+                script {
+                    docker.image('golang:1.16').inside {
+                        sh 'ls'
+                        sh 'pwd'
+                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && API_URLS=http://`cat ../solution_container_ip0.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest'
+                    }
+                }
+            }
+        }
+
+        stage('Run solution and mongo') {
+            steps {
+                script {
+                    echo 'Run MongoDB'
+                    sh 'docker run -d mongo:4.4 >mongo_container_id.txt'
+                    sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat mongo_container_id.txt` >mongo_container_ip.txt"
+
+                    echo 'Run first solution container'
+                    sh 'docker run -d -e STORAGE_MODE=mongo -e MONGO_URL=mongodb://`cat mongo_container_ip.txt`:27017 MONGO_DBNAME=microblog -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id1.txt'
+                    sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id1.txt` >solution_container_ip1.txt"
+                    echo 'First container id is `cat solution_container_id1.txt`, ip is `solution_container_ip1.txt`'
+
+                    echo 'Run second solution container'
+                    sh 'docker run -d -e STORAGE_MODE=mongo -e MONGO_URL=mongodb://`cat mongo_container_ip.txt`:27017 MONGO_DBNAME=microblog -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id2.txt'
+                    sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id2.txt` >solution_container_ip2.txt"
+                    echo 'Second container id is `cat solution_container_id2.txt`, ip is `solution_container_ip2.txt`'
+                }
+            }
+        }
+        stage('Run tests') {
+            steps {
+                script {
+                    docker.image('golang:1.16').inside {
+                        sh 'ls'
+                        sh 'pwd'
+                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && API_URLS="http://`cat ../solution_container_ip1.txt`:8080 http://`cat ../solution_container_ip2.txt`:8080" GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker kill `cat solution_container_id0.txt` || echo "Failed to kill first solution docker container, maybe it didnt start"'
+
+            sh 'docker kill cat mongo_container_id.txt || echo "Failed to kill mongo container, maybe it didnt start"'
+            sh 'docker kill `cat solution_container_id1.txt` || echo "Failed to kill first mongo solution docker container, maybe it didnt start"'
+            sh 'docker kill `cat solution_container_id2.txt` || echo "Failed to kill second mongo solution docker container, maybe it didnt start"'
+        }
+    }
+}
