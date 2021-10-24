@@ -128,7 +128,7 @@ pipeline {
             }
         }
 
-        stage('Prepare k8s cluster') {
+        stage('Create k8s cluster') {
             steps {
                 script {
                     sh 'bash ../deploy-k8s.sh ${CLUSTER_NAME} cluster-config.json'
@@ -139,13 +139,13 @@ pipeline {
         stage('Run solution in k8s cluster') {
             steps {
                 script {
-                    sh ''' sed -i -e 's/${NODE_PORT}'/${NODE_PORT}/ solution/k8s-cluster.yaml'''
-                    sh ''' sed -i -e 's/${SOLUTION_IMAGE_NAME}'/${SOLUTION_IMAGE_NAME}/ solution/k8s-cluster.yaml'''
+                    sh ''' sed -i -e 's/${NODE_PORT}'/${NODE_PORT}/ solution/k8s-manifest.yaml'''
+                    sh ''' sed -i -e 's/${SOLUTION_IMAGE_NAME}'/${SOLUTION_IMAGE_NAME}/ solution/k8s-manifest.yaml'''
 
-                    echo "Substituted k8s-cluster template:"
-                    sh 'cat k8s.cluster.yaml'
+                    echo "Substituted k8s manifest:"
+                    sh 'cat k8s-manifest.yaml'
 
-                    sh 'kubectl apply -f solution/k8s-cluster.yaml'
+                    sh 'kubectl apply -f solution/k8s-manifest.yaml'
                 }
             }
         }
