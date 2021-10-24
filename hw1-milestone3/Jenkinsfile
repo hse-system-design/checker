@@ -132,7 +132,7 @@ pipeline {
         stage('Create k8s cluster') {
             steps {
                 script {
-                    sh 'bash ../deploy-k8s.sh ${CLUSTER_NAME} cluster-config.json'
+                    sh 'bash ./deploy-k8s.sh ${CLUSTER_NAME} cluster-config.json'
                     sh 'echo Created k8s cluster at IP `cat cluster_ip.txt`'
                 }
             }
@@ -166,7 +166,7 @@ pipeline {
 
     post {
         always {
-            sh 'bash ../destroy-k8s.sh ${CLUSTER_NAME}'
+            sh 'bash ./destroy-k8s.sh ${CLUSTER_NAME}'
 
             sh 'docker kill `cat solution_container_id0.txt` || echo "Failed to kill first solution docker container, maybe it didnt start"'
 
