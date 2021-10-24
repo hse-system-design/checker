@@ -149,7 +149,7 @@ pipeline {
                 }
             }
         }
-        stage('Run tests') {
+        stage('Run tests against k8s') {
             steps {
                 script {
                     docker.image('golang:1.16').inside {
