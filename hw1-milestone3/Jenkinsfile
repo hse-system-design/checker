@@ -122,7 +122,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    sh 'yc container registry configure-docker'
+//                     sh 'yc container registry configure-docker'
                     sh 'cat /var/lib/jenkins/biba-kukovich-docker-registry-key.json | docker login --username json_key --password-stdin cr.yandex'
                     sh 'docker push ${SOLUTION_IMAGE_NAME}'
                 }
