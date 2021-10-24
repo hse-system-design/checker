@@ -51,7 +51,7 @@ pipeline {
             steps {
                 script {
                     sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/hse_system_design_bot_github && git clone git@github.com:hse-system-design-2021/baseline-hw-1.git baseline'
-                    sh 'cd baseline && git checkout milestone2 && cd ..'
+                    sh 'cd baseline && git checkout milestone3 && cd ..'
                 }
             }
         }
