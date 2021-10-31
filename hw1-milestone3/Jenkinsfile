@@ -142,7 +142,7 @@ pipeline {
             steps {
                 script {
                     sh ''' sed -i -e 's/${NODE_PORT}'/${NODE_PORT}/ solution/k8s-manifest.yaml'''
-                    sh ''' sed -i -e 's/${SOLUTION_IMAGE_NAME}'/${SOLUTION_IMAGE_NAME}/ solution/k8s-manifest.yaml'''
+                    sh ''' sed -i -e 's%${SOLUTION_IMAGE_NAME}'"%${SOLUTION_IMAGE_NAME}%g" solution/k8s-manifest.yaml'''
 
                     echo "Substituted k8s manifest:"
                     sh 'cat k8s-manifest.yaml'
