@@ -145,7 +145,7 @@ pipeline {
                     sh ''' sed -i -e 's%${SOLUTION_IMAGE_NAME}'"%${SOLUTION_IMAGE_NAME}%g" solution/k8s-manifest.yaml'''
 
                     echo "Substituted k8s manifest:"
-                    sh 'cat k8s-manifest.yaml'
+                    sh 'cat solution/k8s-manifest.yaml'
 
                     sh 'kubectl apply -f solution/k8s-manifest.yaml'
                 }
