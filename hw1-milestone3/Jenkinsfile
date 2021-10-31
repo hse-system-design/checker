@@ -132,7 +132,8 @@ pipeline {
         stage('Create k8s cluster') {
             steps {
                 script {
-                    sh 'bash ./deploy-k8s.sh ${CLUSTER_NAME} cluster-config.json'
+                    sh 'pwd'
+                    sh 'bash ./deploy-k8s.sh ${CLUSTER_NAME} ./cluster-config.json'
                     sh 'echo Created k8s cluster at IP `cat cluster_ip.txt`'
                 }
             }
