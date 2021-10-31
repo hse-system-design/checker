@@ -133,7 +133,7 @@ pipeline {
             steps {
                 script {
                     sh 'pwd'
-                    sh 'bash ./deploy-k8s.sh ${CLUSTER_NAME} ./cluster-config.json'
+                    sh 'bash ./deploy-k8s.sh ${CLUSTER_NAME} ./hw1-milestone3/cluster-config.json'
                     sh 'echo Created k8s cluster at IP `cat cluster_ip.txt`'
                 }
             }
