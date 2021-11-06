@@ -133,7 +133,7 @@ pipeline {
             sh 'docker logs `cat solution_container_id0.txt` >> logs.txt 2>&1 || true'
             sh 'echo "CONTAINER 2 ==============================\n" >> logs.txt'
             sh 'docker logs `cat solution_container_id1.txt` >> logs.txt 2>&1 || true'
-            sh 'echo "CONTAINER 3 ==============================\n" > logs.txt'
+            sh 'echo "CONTAINER 3 ==============================\n" >> logs.txt'
             sh 'docker logs `cat solution_container_id2.txt` >> logs.txt 2>&1 || true'
             archiveArtifacts artifacts: 'logs.txt', fingerprint: true
         }
