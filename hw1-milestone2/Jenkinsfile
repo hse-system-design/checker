@@ -118,7 +118,7 @@ pipeline {
             }
         }
 
-        state('Collect logs') {
+        stage('Collect logs') {
             steps {
                 script {
                     echo 'Collecting logs from containers for debugging'
