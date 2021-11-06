@@ -88,6 +88,11 @@ pipeline {
     post {
         always {
             sh 'docker kill `cat solution_container_id.txt` || echo "Failed to kill solution docker container, maybe it didnt start"'
+
+            echo 'Collecting logs from containers for debugging'
+            sh 'echo "CONTAINER ==============================\n" >> logs.txt'
+            sh 'docker logs `cat solution_container_id.txt` >> logs.txt 2>&1 || true'
+            archiveArtifacts artifacts: 'logs.txt', fingerprint: true
         }
     }
 }
