@@ -75,8 +75,8 @@ pipeline {
             steps {
                 script {
                     docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
-                        sh 'go get github.com/ADKosm/go-junit-report@v0.9.2'
-                        sh 'go install github.com/ADKosm/go-junit-report@v0.9.2'
+                        sh 'GOCACHE=/tmp/.cache go get github.com/ADKosm/go-junit-report@v0.9.2'
+                        sh 'GOCACHE=/tmp/.cache go install github.com/ADKosm/go-junit-report@v0.9.2'
 
                         sh 'ls'
                         sh 'pwd'
