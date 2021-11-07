@@ -98,7 +98,7 @@ pipeline {
                 docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
                     sh 'GOCACHE=/tmp/.cache go get github.com/ADKosm/go-junit-report@v0.9.2'
                     sh 'GOCACHE=/tmp/.cache go install github.com/ADKosm/go-junit-report@v0.9.2'
-                    sh 'cat rawtest.txt | go-junit-report > /output/junit.xml'
+                    sh 'cat rawtest.txt | go-junit-report > /output/junit.xml || true'
                 }
             }
             junit 'junit.xml'
