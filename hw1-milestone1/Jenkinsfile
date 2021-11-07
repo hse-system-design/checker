@@ -81,15 +81,6 @@ pipeline {
                         sh 'cd baseline && API_URL=http://`cat ../solution_container_ip.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 > /output/rawtest.txt'
                     }
                 }
-
-                script {
-                    docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
-                        sh 'echo rawtest.txt'
-                        sh 'GOCACHE=/tmp/.cache go get github.com/ADKosm/go-junit-report@v0.9.2'
-                        sh 'GOCACHE=/tmp/.cache go install github.com/ADKosm/go-junit-report@v0.9.2'
-                        sh 'cat rawtest.txt | go-junit-report > junit.xml'
-                    }
-                }
             }
         }
     }
@@ -102,6 +93,15 @@ pipeline {
             sh 'echo "CONTAINER ==============================\n" >> logs.txt'
             sh 'docker logs `cat solution_container_id.txt` >> logs.txt 2>&1 || true'
             archiveArtifacts artifacts: 'logs.txt', fingerprint: true
+
+            script {
+                docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
+                    sh 'echo rawtest.txt'
+                    sh 'GOCACHE=/tmp/.cache go get github.com/ADKosm/go-junit-report@v0.9.2'
+                    sh 'GOCACHE=/tmp/.cache go install github.com/ADKosm/go-junit-report@v0.9.2'
+                    sh 'cat rawtest.txt | go-junit-report > junit.xml'
+                }
+            }
             junit 'junit.xml'
         }
     }
