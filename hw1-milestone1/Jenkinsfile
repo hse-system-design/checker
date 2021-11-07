@@ -81,7 +81,7 @@ pipeline {
                         sh 'ls'
                         sh 'pwd'
                         sh 'cd baseline && go mod tidy'
-                        sh 'cd baseline && API_URL=http://`cat ../solution_container_ip.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 > rawtest.txt ; echo "${PIPESTATUS[0]}" > status.txt'
+                        sh 'cd baseline && API_URL=http://`cat ../solution_container_ip.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 > rawtest.txt | true ; echo "${PIPESTATUS[0]}" > status.txt'
                         sh 'cd baseline && cat rawtest.txt && cat rawtest.txt | go-junit-report > /output/junit.xml && test `cat status.txt` -eq 0'
                     }
                 }
