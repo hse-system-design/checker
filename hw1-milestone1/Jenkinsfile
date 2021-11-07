@@ -74,14 +74,14 @@ pipeline {
         stage('Run tests') {
             steps {
                 script {
-                    docker.image('golang:1.16').inside {
+                    docker.image('golang:1.16').inside('-v $WORKSPACE:/output') {
                         sh 'go get github.com/ADKosm/go-junit-report@v0.9.2'
                         sh 'go install github.com/ADKosm/go-junit-report@v0.9.2'
 
                         sh 'ls'
                         sh 'pwd'
                         sh 'cd baseline && go mod tidy'
-                        sh 'cd baseline && API_URL=http://`cat ../solution_container_ip.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 | go-junit-report > ../junit.xml'
+                        sh 'cd baseline && API_URL=http://`cat ../solution_container_ip.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 | go-junit-report > /output/junit.xml'
                     }
                 }
             }
