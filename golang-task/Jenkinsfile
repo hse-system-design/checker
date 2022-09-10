@@ -5,15 +5,25 @@ pipeline {
     }
     parameters {
         string(name: 'STUDENT_NAME', defaultValue: '', description: 'Name of student')
-        string(name: 'GIST_MAIN_URL', defaultValue: '', description: 'Link to main.go from raw gist on GitHub')
+        string(name: 'GITHUB_CLONE_URL', defaultValue: '', description: 'Github repository clone URL (use SSH scheme). NOTE: hse-system-design-bot must have read access to it.')
+        string(name: 'GIT_COMMIT_HASH', defaultValue: '', description: 'Commit id of your solution in the repository')
     }
     stages {
         stage('Sanity check') {
             steps {
                 script {
-                    if (GIST_MAIN_URL == '' || STUDENT_NAME == '') {
+                    if (STUDENT_NAME == '' || GITHUB_CLONE_URL == '' || GIT_COMMIT_HASH == '') {
                         currentBuild.result = 'ABORTED'
-                        error("No GIST_MAIN_URL or STUDENT_NAME variable")
+                        error("Not all required parameters are specified.")
+                    }
+                    if (STUDENT_NAME)
+                    if (!GITHUB_CLONE_URL.startsWith("git@github.com")) {
+                        currentBuild.result = 'ABORTED'
+                        error("GITHUB_CLONE_URL doesn't seem to use SSH scheme")
+                    }
+                    if (!GIT_COMMIT_HASH.matches("^[0-9a-f]{40}\$")) {
+                        currentBuild.result = 'ABORTED'
+                        error("GIT_COMMIT_HASH doesn't seem to be a SHA-1 hash. Please, specify full commit hash here. Don't use tags or branches")
                     }
                     cleanWs()
                     checkout scm
@@ -21,15 +31,26 @@ pipeline {
                 }
             }
         }
+        stage('Clone solution repository') {
+            steps {
+                script {
+                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/github_hse_system_design_bot2 && git clone ${GITHUB_CLONE_URL} solution'
+                    sh 'cd solution && git checkout ${GIT_COMMIT_HASH} && cd ..'
+
+                    // actually, this should never fail because github would reject an attempt to push 40-hex-long tags.
+                    sh 'cd solution && [ "${GIT_COMMIT_HASH}" =  `git rev-parse HEAD` ] || (echo "GIT_COMMIT_HASH seems to be a branch or label" && false)'
+                }
+            }
+        }
         stage('Run tests') {
             steps {
                 script {
-                    docker.image('golang:1.16').inside {
+                    docker.image('golang:1.19').inside {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'curl ${GIST_MAIN_URL} > golang-task/main.go'
-                        sh 'cd golang-task && go mod tidy'
-                        sh 'cd golang-task && GOCACHE=/tmp/.cache go test -v -timeout 2s'
+                        sh 'cp solution/impl.go golang-task/impl.go'
+                        sh 'cd golang-task && GOCACHE=/tmp/.cache go mod tidy'
+                        sh 'cd golang-task && GOCACHE=/tmp/.cache go test -v -timeout 10s'
                     }
                 }
             }
