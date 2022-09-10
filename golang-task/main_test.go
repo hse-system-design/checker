@@ -2,133 +2,227 @@ package ordcol
 
 import (
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 	"math/rand"
-	"sort"
 	"testing"
 )
 
-func TestCollection_AddAndGet(t *testing.T) {
-	collection := NewCollection()
+func TestCollection_Correctness(t *testing.T) {
+	t.Run("AddAndGet", func(t *testing.T) {
+		col := NewCollection[int, int]()
 
-	err := collection.Add(NewItem(2, 4))
-	require.NoError(t, err)
-	err = collection.Add(NewItem(5, 9))
-	require.NoError(t, err)
-
-	t.Run("existing keys", func(t *testing.T) {
-		item1, ok := collection.At(2)
-		require.True(t, ok)
-		require.Equal(t, 4, item1.Value())
-
-		item2, ok := collection.At(5)
-		require.True(t, ok)
-		require.Equal(t, 9, item2.Value())
-	})
-
-	t.Run("add existing key", func(t *testing.T) {
-		err := collection.Add(NewItem(2, 4))
-		require.ErrorIs(t, err, ErrDuplicateKey)
-	})
-
-	t.Run("non-existing keys", func(t *testing.T) {
-		_, ok := collection.At(12)
-		require.False(t, ok)
-	})
-}
-
-func TestCollection_Empty(t *testing.T) {
-	collection := NewCollection()
-
-	t.Run("at", func(t *testing.T) {
-		_, ok := collection.At(1)
-		require.False(t, ok)
-	})
-
-	t.Run("iter by insert", func(t *testing.T) {
-		iter := collection.IterateBy(ByInsertion)
-		require.False(t, iter.HasNext())
-	})
-
-	t.Run("iter by keys", func(t *testing.T) {
-		iter := collection.IterateBy(ByKey)
-		require.False(t, iter.HasNext())
-	})
-}
-
-func TestCollection_IterateByInsertion(t *testing.T) {
-	keys := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	rand.Shuffle(len(keys), func(i, j int) {
-		keys[i], keys[j] = keys[j], keys[i]
-	})
-
-	collection := NewCollection()
-
-	for _, key := range keys {
-		err := collection.Add(NewItem(key, rand.Int()))
+		err := col.Add(2, 4)
 		require.NoError(t, err)
-	}
-
-	iter := collection.IterateBy(ByInsertion)
-
-	t.Run("equal order", func(t *testing.T) {
-		var lookupKeys []int
-		for iter.HasNext() {
-			item, err := iter.Next()
-			require.NoError(t, err)
-
-			lookupKeys = append(lookupKeys, item.Key())
-		}
-
-		require.Equal(t, keys, lookupKeys)
-	})
-
-	t.Run("error on empty iterator", func(t *testing.T) {
-		_, err := iter.Next()
-		require.ErrorIs(t, err, ErrEmptyIterator)
-	})
-}
-
-func TestCollection_IterateByKeys(t *testing.T) {
-	var keys []int
-	for i := 0; i < 10; i++ {
-		keys = append(keys, rand.Int())
-	}
-
-	collection := NewCollection()
-
-	for _, key := range keys {
-		err := collection.Add(NewItem(key, rand.Int()))
+		err = col.Add(5, 9)
 		require.NoError(t, err)
-	}
 
-	iter := collection.IterateBy(ByKey)
+		t.Run("PresentKey", func(t *testing.T) {
+			val, ok := col.At(2)
+			require.True(t, ok)
+			require.Equal(t, 4, val)
 
-	t.Run("equal order", func(t *testing.T) {
-		var lookupKeys []int
-		for iter.HasNext() {
-			iter, err := iter.Next()
-			require.NoError(t, err)
-
-			lookupKeys = append(lookupKeys, iter.Key())
-		}
-
-		sort.Slice(keys, func(i, j int) bool {
-			return keys[i] < keys[j]
+			val, ok = col.At(5)
+			require.True(t, ok)
+			require.Equal(t, 9, val)
 		})
 
-		require.Equal(t, keys, lookupKeys)
+		t.Run("AbsentKey", func(t *testing.T) {
+			_, ok := col.At(42)
+			require.False(t, ok)
+		})
+
+		t.Run("AddExistingKey", func(t *testing.T) {
+			err := col.Add(2, 5)
+			require.ErrorIs(t, err, ErrDuplicateKey)
+		})
+
 	})
 
-	t.Run("error on empty iterator", func(t *testing.T) {
-		_, err := iter.Next()
-		require.ErrorIs(t, err, ErrEmptyIterator)
+	t.Run("Empty", func(t *testing.T) {
+		col := NewCollection[int, int]()
+
+		t.Run("At", func(t *testing.T) {
+			_, ok := col.At(1)
+			require.False(t, ok)
+		})
+
+		t.Run("IterByInsertion", func(t *testing.T) {
+			it := col.IterateBy(ByInsertion)
+			require.False(t, it.HasNext())
+			_, _, err := it.Next()
+			require.ErrorIs(t, err, ErrEmptyIterator)
+		})
+
+		t.Run("IterByInsertionRev", func(t *testing.T) {
+			it := col.IterateBy(ByInsertionRev)
+			require.False(t, it.HasNext())
+			_, _, err := it.Next()
+			require.ErrorIs(t, err, ErrEmptyIterator)
+		})
+
+		t.Run("InvalidOrder", func(t *testing.T) {
+			var rawErr any
+			func() {
+				defer func() { rawErr = recover() }()
+				col.IterateBy(100500)
+			}()
+			err, ok := rawErr.(error)
+			require.True(t, ok, "expected erorr but got %v", err)
+			require.ErrorIs(t, err, ErrUnknownOrder)
+		})
+	})
+
+	t.Run("IterateByInsertion", func(t *testing.T) {
+		keys := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		rand.Shuffle(len(keys), func(i, j int) {
+			keys[i], keys[j] = keys[j], keys[i]
+		})
+
+		col := NewCollection[int, int]()
+		for _, key := range keys {
+			err := col.Add(key, key*2)
+			require.NoError(t, err)
+		}
+		require.Equal(t, len(keys), col.Len())
+
+		t.Run("AscOrder", func(t *testing.T) {
+			var expectedOrder []int
+			for _, key := range keys {
+				expectedOrder = append(expectedOrder, key, key*2)
+			}
+
+			order := drainIterator(t, col.IterateBy(ByInsertion))
+			require.Equal(t, expectedOrder, order)
+		})
+
+		t.Run("DescOrder", func(t *testing.T) {
+			expectedOrder := make([]int, 2*len(keys))
+			for idx, key := range keys {
+				expectedOrder[len(expectedOrder)-2*idx-2] = key
+				expectedOrder[len(expectedOrder)-2*idx-1] = 2 * key
+			}
+
+			order := drainIterator(t, col.IterateBy(ByInsertionRev))
+			require.Equal(t, expectedOrder, order)
+
+		})
+	})
+
+	t.Run("DelMin", func(t *testing.T) {
+		orderedKeys := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		keys := slices.Clone(orderedKeys)
+		rand.Shuffle(len(keys), func(i, j int) {
+			keys[i], keys[j] = keys[j], keys[i]
+		})
+
+		col := NewCollection[int, int]()
+		for _, key := range keys {
+			err := col.Add(key, key*3)
+			require.NoError(t, err)
+		}
+		require.Equal(t, len(keys), col.Len())
+
+		var deletedKeys []int
+		t.Run("DeleteFirstHalf", func(t *testing.T) {
+			for i := 0; i < len(orderedKeys)/2; i++ {
+				key, val, err := col.DelMin()
+				require.NoError(t, err)
+				require.Equal(t, key*3, val)
+				deletedKeys = append(deletedKeys, key)
+			}
+
+			require.Equal(t, orderedKeys[:len(deletedKeys)], deletedKeys)
+			require.ElementsMatch(t, orderedKeys[len(deletedKeys):], drainKeys(t, col.IterateBy(ByInsertion)))
+		})
+
+		t.Run("DeleteRemaining", func(t *testing.T) {
+			for col.Len() > 0 {
+				key, val, err := col.DelMin()
+				require.NoError(t, err)
+				require.Equal(t, key*3, val)
+				deletedKeys = append(deletedKeys, key)
+			}
+			_, _, err := col.DelMin()
+			require.ErrorIs(t, err, ErrEmptyCollection)
+
+			require.Equal(t, orderedKeys, deletedKeys)
+		})
 	})
 }
 
-func TestPanicOnWrongIterationOrder(t *testing.T) {
-	collection := NewCollection()
-
-	require.Panics(t, func() {
-		collection.IterateBy(IterationOrder(100))
+func TestCollection_Stress(t *testing.T) {
+	numbers := make([]int, 1_234_567)
+	for i := range numbers {
+		numbers[i] = i + 1
+	}
+	rand.Shuffle(len(numbers), func(i, j int) {
+		numbers[i], numbers[j] = numbers[j], numbers[i]
 	})
+
+	col := NewCollection[int, int]()
+	// insert all numbers
+	for idx, num := range numbers {
+		if idx > 0 && idx%10_000 == 0 {
+			keys := drainKeysLimit(t, col.IterateBy(ByInsertionRev), 10_000)
+			expected := slices.Clone(numbers[idx-10_000 : idx])
+			for i := 0; i < len(expected)/2; i++ {
+				j := len(expected) - i - 1
+				expected[i], expected[j] = expected[j], expected[i]
+			}
+			require.Equal(t, expected, keys)
+		}
+
+		err := col.Add(num, num*5)
+		require.NoError(t, err)
+
+		require.Equal(t, num, drainKeysLimit(t, col.IterateBy(ByInsertionRev), 1)[0])
+	}
+
+	var deletedCount, earliestInsertedIdx int
+	for col.Len() > 0 {
+		key, val, err := col.DelMin()
+		require.NoError(t, err)
+		deletedCount++
+		require.Equal(t, deletedCount, key)
+		require.Equal(t, key*5, val)
+
+		for earliestInsertedIdx < len(numbers) && numbers[earliestInsertedIdx] <= key {
+			earliestInsertedIdx++
+		}
+		if col.Len() > 0 {
+			earliestInserted := drainKeysLimit(t, col.IterateBy(ByInsertion), 1)[0]
+			require.Equal(t, numbers[earliestInsertedIdx], earliestInserted)
+		}
+	}
+}
+
+func drainKeysLimit(t *testing.T, it Iterator[int, int], limit int) []int {
+	var result []int
+	for len(result) < limit && it.HasNext() {
+		k, _, err := it.Next()
+		require.NoError(t, err)
+		result = append(result, k)
+	}
+	return result
+}
+
+func drainKeys(t *testing.T, it Iterator[int, int]) []int {
+	vals := drainIterator(t, it)
+	for i := 0; i < len(vals)/2; i++ {
+		vals[i] = vals[i*2]
+	}
+	return vals[:len(vals)/2]
+}
+
+// drainIterator returns slice of key-value pairs of [K1, V1, K2, V2, ...]
+func drainIterator(t *testing.T, it Iterator[int, int]) []int {
+	var result []int
+	for it.HasNext() {
+		k, v, err := it.Next()
+		require.NoError(t, err)
+		result = append(result, k, v)
+	}
+	_, _, err := it.Next()
+	require.ErrorIs(t, err, ErrEmptyIterator)
+	return result
 }
