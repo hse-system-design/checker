@@ -23,11 +23,6 @@ type Iterator[K comparable, V any] interface {
 	Next() (K, V, error)
 }
 
-type Item interface {
-	Key() int
-	Value() int
-}
-
 type Collection[K constraints.Ordered, V any] interface {
 	// Add adds specified value to the collection and associates it with the specified key.
 	//
