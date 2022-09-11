@@ -48,7 +48,8 @@ pipeline {
                     docker.image('golang:1.19').inside {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'cp solution/impl.go golang-task/impl.go'
+			// Solution may be in the root or in the golang-task repository
+                        sh 'cp solution/impl.go golang-task/impl.go || cp solution/golang-task/impl.go golang-task/impl.go'
                         sh 'cd golang-task && GOCACHE=/tmp/.cache go mod tidy'
                         sh 'cd golang-task && GOCACHE=/tmp/.cache go test -v -timeout 10s'
                     }
