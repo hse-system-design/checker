@@ -104,7 +104,78 @@ func TestCollection_Correctness(t *testing.T) {
 
 			order := drainIterator(t, col.IterateBy(ByInsertionRev))
 			require.Equal(t, expectedOrder, order)
+		})
+	})
 
+	t.Run("InvalidateIterator", func(t *testing.T) {
+		keys := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		rand.Shuffle(len(keys), func(i, j int) {
+			keys[i], keys[j] = keys[j], keys[i]
+		})
+
+		col := NewCollection[int, int]()
+		for _, key := range keys {
+			err := col.Add(key, key*2)
+			require.NoError(t, err)
+		}
+		require.Equal(t, len(keys), col.Len())
+
+		limit := 5
+
+		t.Run("AscOrder", func(t *testing.T) {
+			var expectedOrder []int
+			for _, key := range keys[:limit] {
+				expectedOrder = append(expectedOrder, key)
+			}
+
+			addFn := func() error {
+				return col.Add(0, 0)
+			}
+			delFn := func() error {
+				key, value, err := col.DelMin()
+				require.Equal(t, 0, key)
+				require.Equal(t, 0, value)
+				return err
+			}
+
+			for _, cb := range []func() error{addFn, delFn} {
+				it := col.IterateBy(ByInsertion)
+				order := drainKeysLimit(t, it, limit)
+				require.Equal(t, expectedOrder, order)
+
+				require.NoError(t, cb())
+				_, _, err := it.Next()
+				require.ErrorIs(t, err, ErrEmptyIterator)
+			}
+		})
+
+		t.Run("DescOrder", func(t *testing.T) {
+			expectedOrder := make([]int, limit)
+			for idx, key := range keys[len(keys)-limit:] {
+				expectedOrder[limit-idx-1] = key
+			}
+
+			addFn := func() error {
+				copy(expectedOrder[1:limit], expectedOrder[:limit-1])
+				expectedOrder[0] = 0
+				return col.Add(0, 0)
+			}
+			delFn := func() error {
+				key, value, err := col.DelMin()
+				require.Equal(t, 0, key)
+				require.Equal(t, 0, value)
+				return err
+			}
+
+			for _, cb := range []func() error{addFn, delFn} {
+				it := col.IterateBy(ByInsertionRev)
+				order := drainKeysLimit(t, it, limit)
+				require.Equal(t, expectedOrder, order)
+
+				require.NoError(t, cb())
+				_, _, err := it.Next()
+				require.ErrorIs(t, err, ErrEmptyIterator)
+			}
 		})
 	})
 
