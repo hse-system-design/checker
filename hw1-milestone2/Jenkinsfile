@@ -112,7 +112,7 @@ pipeline {
                         sh 'ls'
                         sh 'pwd'
                         sh 'cd baseline && go mod tidy'
-                        sh 'cd baseline && API_URLS="http://`cat ../solution_container_ip1.txt`:8080 http://`cat ../solution_container_ip2.txt`:8080" GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 > >(tee /output/rawtest2.txt)'
+                        sh 'cd baseline && API_URLS="http://`cat ../solution_container_ip1.txt`:8080 http://`cat ../solution_container_ip2.txt`:8080" GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 | tee /output/rawtest2.txt'
                     }
                 }
             }
