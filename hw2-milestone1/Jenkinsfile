@@ -48,7 +48,7 @@ pipeline {
         stage('Clone baseline repository') {
             steps {
                 script {
-                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/github_hse_system_design_bot2 && git clone git@github.com:hse-system-design-2021/baseline-hw-1.git baseline'
+                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/github_hse_system_design_bot2 && git clone git@github.com:hse-system-design/baseline-hw-1.git baseline'
                     sh 'cd baseline && git checkout hw2-milestone1 && cd ..'
                 }
             }
