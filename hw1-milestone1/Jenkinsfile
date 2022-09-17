@@ -8,7 +8,7 @@ pipeline {
     }
     parameters {
         string(name: 'STUDENT_NAME', defaultValue: '', description: 'Name of student')
-        string(name: 'GITHUB_CLONE_URL', defaultValue: '', description: 'Github repository clone URL (use SSH scheme). NOTE: hse-system-design-bot must have read access to it.')
+        string(name: 'GITHUB_CLONE_URL', defaultValue: '', description: 'Github repository clone URL (use SSH scheme).')
         string(name: 'GIT_COMMIT_HASH', defaultValue: '', description: 'Commit id of your solution in the repository')
     }
     stages {
@@ -37,7 +37,7 @@ pipeline {
         stage('Clone solution repository') {
             steps {
                 script {
-                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/hse_system_design_bot_github && git clone ${GITHUB_CLONE_URL} solution'
+                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/github_hse_system_design_bot2 && git clone ${GITHUB_CLONE_URL} solution'
                     sh 'cd solution && git checkout ${GIT_COMMIT_HASH} && cd ..'
 
                     // actually, this should never fail because github would reject an attempt to push 40-hex-long tags.
@@ -48,8 +48,8 @@ pipeline {
         stage('Clone baseline repository') {
             steps {
                 script {
-                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/hse_system_design_bot_github &&  git clone git@github.com:hse-system-design-2021/baseline-hw-1.git baseline'
-                    sh 'cd baseline && git checkout milestone1 && cd ..'
+                    sh 'eval `ssh-agent -s` && ssh-add /var/lib/jenkins/.ssh/github_hse_system_design_bot2 && git clone git@github.com:hse-system-design/baseline-hw-1.git baseline'
+                    sh 'cd baseline && git checkout hw1-milestone1 && cd ..'
                 }
             }
         }
@@ -74,7 +74,7 @@ pipeline {
         stage('Run tests') {
             steps {
                 script {
-                    docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
+                    docker.image('golang:1.19').inside("-v ${WORKSPACE}:/output") {
                         sh 'ls'
                         sh 'pwd'
                         sh 'cd baseline && go mod tidy'
@@ -95,7 +95,7 @@ pipeline {
             archiveArtifacts artifacts: 'logs.txt', fingerprint: true
 
             script {
-                docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
+                docker.image('golang:1.19').inside("-v ${WORKSPACE}:/output") {
                     sh 'GOCACHE=/tmp/.cache go get github.com/ADKosm/go-junit-report@v0.9.2'
                     sh 'GOCACHE=/tmp/.cache go install github.com/ADKosm/go-junit-report@v0.9.2'
                     sh 'cat rawtest.txt | go-junit-report > /output/junit.xml || true'
