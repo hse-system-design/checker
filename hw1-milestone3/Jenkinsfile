@@ -80,7 +80,7 @@ pipeline {
 //                     docker.image('golang:1.16').inside {
 //                         sh 'ls'
 //                         sh 'pwd'
-//                         sh 'cd baseline && go mod tidy'
+//                         sh 'cd baseline && GOCACHE=/tmp/.cache go mod tidy'
 //                         sh 'cd baseline && API_URLS=http://`cat ../solution_container_ip0.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest'
 //                     }
 //                 }
@@ -112,7 +112,7 @@ pipeline {
 //                     docker.image('golang:1.16').inside {
 //                         sh 'ls'
 //                         sh 'pwd'
-//                         sh 'cd baseline && go mod tidy'
+//                         sh 'cd baseline && GOCACHE=/tmp/.cache go mod tidy'
 //                         sh 'cd baseline && API_URLS="http://`cat ../solution_container_ip1.txt`:8080 http://`cat ../solution_container_ip2.txt`:8080" GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest'
 //                     }
 //                 }
@@ -157,7 +157,7 @@ pipeline {
                     docker.image('golang:1.16').inside {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && GOCACHE=/tmp/.cache go mod tidy'
                         sh 'cd baseline && API_URLS="http://`cat ../cluster_ip.txt`:${NODE_PORT}" GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest'
                     }
                 }

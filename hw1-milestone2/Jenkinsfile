@@ -69,7 +69,7 @@ pipeline {
                     echo 'Run solution container'
                     sh 'docker run -d -e STORAGE_MODE=inmemory -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id0.txt'
                     sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id0.txt` >solution_container_ip0.txt"
-                    sh 'echo Container id is `cat solution_container_id0.txt`, ip is `solution_container_ip0.txt`'
+                    sh 'echo Container id is `cat solution_container_id0.txt`, ip is `cat solution_container_ip0.txt`'
                 }
             }
         }
@@ -79,7 +79,7 @@ pipeline {
                     docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && GOCACHE=/tmp/.cache go mod tidy'
                         sh 'cd baseline && API_URLS=http://`cat ../solution_container_ip0.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 | tee /output/rawtest1.txt'
                     }
                 }
@@ -96,12 +96,12 @@ pipeline {
                     echo 'Run first solution container'
                     sh 'docker run -d -e STORAGE_MODE=mongo -e MONGO_URL=mongodb://`cat mongo_container_ip.txt`:27017 -e MONGO_DBNAME=microblog -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id1.txt'
                     sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id1.txt` >solution_container_ip1.txt"
-                    sh 'echo First container id is `cat solution_container_id1.txt`, ip is `solution_container_ip1.txt`'
+                    sh 'echo First container id is `cat solution_container_id1.txt`, ip is `cat solution_container_ip1.txt`'
 
                     echo 'Run second solution container'
                     sh 'docker run -d -e STORAGE_MODE=mongo -e MONGO_URL=mongodb://`cat mongo_container_ip.txt`:27017 -e MONGO_DBNAME=microblog -e SERVER_PORT=8080 ${SOLUTION_IMAGE_NAME} >solution_container_id2.txt'
                     sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat solution_container_id2.txt` >solution_container_ip2.txt"
-                    sh 'echo Second container id is `cat solution_container_id2.txt`, ip is `solution_container_ip2.txt`'
+                    sh 'echo Second container id is `cat solution_container_id2.txt`, ip is `cat solution_container_ip2.txt`'
                 }
             }
         }
@@ -111,7 +111,7 @@ pipeline {
                     docker.image('golang:1.19').inside("-v ${WORKSPACE}:/output") {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && GOCACHE=/tmp/.cache go mod tidy'
                         sh 'cd baseline && API_URLS="http://`cat ../solution_container_ip1.txt`:8080 http://`cat ../solution_container_ip2.txt`:8080" GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 | tee /output/rawtest2.txt'
                     }
                 }

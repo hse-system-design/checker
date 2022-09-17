@@ -79,7 +79,7 @@ pipeline {
                     docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && GOCACHE=/tmp/.cache go mod tidy'
                         sh 'cd baseline && API_URLS=http://`cat ../solution_container_ip0.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 > >(tee /output/rawtest1.txt)'
                     }
                 }
@@ -115,7 +115,7 @@ pipeline {
                     docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && GOCACHE=/tmp/.cache go mod tidy'
                         sh 'cd baseline && API_URLS="http://`cat ../solution_container_ip1.txt`:8080 http://`cat ../solution_container_ip2.txt`:8080" GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 > >(tee /output/rawtest2.txt)'
                     }
                 }
@@ -136,7 +136,7 @@ pipeline {
                     docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
                         sh 'ls'
                         sh 'pwd'
-                        sh 'cd baseline && go mod tidy'
+                        sh 'cd baseline && GOCACHE=/tmp/.cache go mod tidy'
                         sh 'cd baseline && SLOW_MONGO=yes API_URLS="http://`cat ../solution_container_ip1.txt`:8080 http://`cat ../solution_container_ip2.txt`:8080" GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 > >(tee /output/rawtest3.txt)'
                     }
                 }
