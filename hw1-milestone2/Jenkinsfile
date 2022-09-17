@@ -80,7 +80,7 @@ pipeline {
                         sh 'ls'
                         sh 'pwd'
                         sh 'cd baseline && go mod tidy'
-                        sh 'cd baseline && API_URLS=http://`cat ../solution_container_ip0.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 > >(tee /output/rawtest1.txt)'
+                        sh 'cd baseline && API_URLS=http://`cat ../solution_container_ip0.txt`:8080 GOCACHE=/tmp/.cache go test -v -timeout 120s ./src/apitest 2>&1 | tee /output/rawtest1.txt'
                     }
                 }
             }
@@ -108,7 +108,7 @@ pipeline {
         stage('Run tests') {
             steps {
                 script {
-                    docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
+                    docker.image('golang:1.19').inside("-v ${WORKSPACE}:/output") {
                         sh 'ls'
                         sh 'pwd'
                         sh 'cd baseline && go mod tidy'
@@ -138,8 +138,7 @@ pipeline {
             archiveArtifacts artifacts: 'logs.txt', fingerprint: true
 
             script {
-                docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
-                    sh 'GOCACHE=/tmp/.cache go get github.com/ADKosm/go-junit-report@v0.9.2'
+                docker.image('golang:1.19').inside("-v ${WORKSPACE}:/output") {
                     sh 'GOCACHE=/tmp/.cache go install github.com/ADKosm/go-junit-report@v0.9.2'
                     sh 'cat rawtest1.txt | go-junit-report > /output/junit1.xml || true'
                     sh 'cat rawtest2.txt | go-junit-report > /output/junit2.xml || true'
