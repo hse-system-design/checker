@@ -148,6 +148,34 @@ func TestCollection_Correctness(t *testing.T) {
 			require.Equal(t, orderedKeys, deletedKeys)
 		})
 	})
+
+	t.Run("DelAndAddBack", func(t *testing.T) {
+		// given:
+		var col Collection[int, int] = NewCollection[int, int]()
+		require.NoError(t, col.Add(1, 100))
+		require.NoError(t, col.Add(2, 200))
+
+		// when:
+		removedKey, removedVal, err := col.DelMin()
+
+		// then:
+		require.NoError(t, err)
+		require.Equal(t, 1, removedKey)
+		require.Equal(t, 100, removedVal)
+
+		// when:
+		_, found := col.At(1)
+
+		// then:
+		require.False(t, found)
+
+		// when:
+		require.NoError(t, col.Add(1, 300))
+		keys := drainKeys(t, col.IterateBy(ByInsertion))
+
+		// then:
+		require.Equal(t, []int{2, 1}, keys)
+	})
 }
 
 func TestCollection_Stress(t *testing.T) {
