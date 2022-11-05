@@ -90,7 +90,7 @@ pipeline {
             steps {
                 script {
                     echo 'Run MongoDB'
-                    sh 'docker run --cap-add NET_ADMIN -d mongo:4.4 >mongo_container_id.txt'
+                    sh 'docker run --cap-add NET_ADMIN -d lfyuomrgylo/mongo-with-longsleep:4.4 >mongo_container_id.txt'
                     sh "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `cat mongo_container_id.txt` >mongo_container_ip.txt"
 
                     echo 'Run Redis'
@@ -125,12 +125,6 @@ pipeline {
             steps {
                 script {
                     echo 'Slow down mongo network interface'
-                    // TODO: create a docker image with these apt-get commands pre-executed
-                    sh 'docker exec `cat mongo_container_id.txt` apt-get update'
-                    sh 'docker exec `cat mongo_container_id.txt` apt-get install software-properties-common -y'
-                    sh 'docker exec `cat mongo_container_id.txt` add-apt-repository ppa:longsleep/golang-backports'
-                    sh 'docker exec `cat mongo_container_id.txt` apt-get update'
-                    sh 'docker exec `cat mongo_container_id.txt` apt-get install golang-go iproute2 -y'
                     sh 'docker exec `cat mongo_container_id.txt` tc qdisc add dev eth0 root netem delay 150ms'
 
                     docker.image('golang:1.16').inside("-v ${WORKSPACE}:/output") {
