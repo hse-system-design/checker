@@ -149,9 +149,6 @@ pipeline {
                 }
             }
             junit 'junit*.xml'
-
-            sh 'docker container prune -f'
-            sh 'docker volume prune -f'
         }
     }
 }
